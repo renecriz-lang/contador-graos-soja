@@ -22,6 +22,7 @@
     ESPESSURA_MIN: 0.5,      // mm: mancha mais fina que isso (linha de desalinhamento) não é grão
     CREME: 10,               // quanto o b* pode passar do branco das molduras antes de virar "creme"
     ESCURO_NO_BRANCO: 0.45,  // no branco esperado, abaixo disso = algo por cima
+    CONFERE_MIN: 0.93,       // fração do desenho da placa (preto/branco) que tem que bater com a foto
   };
 
   // ---------------- marcadores ----------------
@@ -268,6 +269,10 @@
     for (let i = 0; i < N; i += 3) { if (tipo[i] === 1) lp.push(L[i]); else if (tipo[i] === 2) { lb.push(L[i]); bb.push(B[i]); } }
     const preto = mediana(lp), branco = mediana(lb), bBranco = mediana(bb), faixa = Math.max(branco - preto, 1);
     const n = i => (L[i] - preto) / faixa;
+    // autoconferência do encaixe: o branco dos marcadores caiu no branco? (gêmeo torto = muito branco errado)
+    let cb = 0, nb = 0;
+    for (let i = 0; i < N; i += 2) if (tipo[i] === 2) { nb++; if (n(i) > 0.5) cb++; }
+    const confere = nb ? cb / nb : 0;
 
     const furos = modelo.furos.map(f => {
       let c = 0; for (const i of f.idx) if (n(i) > cfg.CLARO) c++;
@@ -292,7 +297,7 @@
       anomalias.push({ x: cx, y: cy, area, pertoDoFuro: perto });
     }
     for (let i = 0; i < N; i++) if (an[i]) { vista[i * 4] = 255; vista[i * 4 + 1] = 0; vista[i * 4 + 2] = 0; }
-    return { furos, anomalias, vista, W, A, preto, branco };
+    return { furos, anomalias, vista, W, A, preto, branco, confere };
   }
 
   function abrir(m, W, A) {        // erosão 3x3 seguida de dilatação 3x3 (tira pontinhos)
@@ -347,24 +352,48 @@
   }
 
   /* Tudo de uma vez: foto -> resultado. */
-  /* opc.sementes: marcadores já achados pela câmera ao vivo (em coordenadas desta foto). Se vierem
-     3 ou mais, só refina os cantos e pula a busca em várias escalas (bem mais rápido). */
+  function recortar(rgba, w, h, x0, y0, x1, y1) {
+    const W = x1 - x0, H = y1 - y0, out = new Uint8ClampedArray(W * H * 4);
+    for (let y = 0; y < H; y++) out.set(rgba.subarray(((y + y0) * w + x0) * 4, ((y + y0) * w + x1) * 4), y * W * 4);
+    return out;
+  }
+
+  /* opc.sementes: marcadores achados pela câmera ao vivo (coordenadas desta foto). Servem só pra saber
+     ONDE está a placa: os marcadores são procurados de novo nesta foto, só naquela região (rápido e sem
+     herdar o tremido entre o quadro do vídeo e a foto). Depois de encaixar, confere se o desenho da placa
+     bate com a foto; se não bater, faz a busca completa. */
   function contar(rgba, w, h, modelo, opc) {
     const t0 = Date.now();
     opc = opc || {};
-    let marcadores = null, enc = null;
-    if (opc.sementes && opc.sementes.length >= 3) {
-      marcadores = refinarMarcadores(rgba, w, h, opc.sementes.map(m => ({ id: m.id, cantos: m.cantos.map(c => ({ x: c.x, y: c.y })) })));
-      enc = encaixar(modelo.geo, marcadores);
-      if (enc && (enc.ids.length < 3 || enc.erroMedio > 3)) enc = null;     // semente ruim: procura de novo
+    const tentativas = [];
+    if (opc.sementes && opc.sementes.length >= 2) tentativas.push('regiao');
+    tentativas.push('completa');
+    let melhor = null;
+    for (const modo of tentativas) {
+      let marcadores;
+      if (modo === 'regiao') {
+        const xs = [], ys = [];
+        opc.sementes.forEach(m => m.cantos.forEach(c => { xs.push(c.x); ys.push(c.y); }));
+        const mx = (Math.max(...xs) - Math.min(...xs)) * 0.25, my = (Math.max(...ys) - Math.min(...ys)) * 0.25;
+        const x0 = Math.max(0, Math.floor(Math.min(...xs) - mx)), y0 = Math.max(0, Math.floor(Math.min(...ys) - my));
+        const x1 = Math.min(w, Math.ceil(Math.max(...xs) + mx)), y1 = Math.min(h, Math.ceil(Math.max(...ys) + my));
+        const rec = recortar(rgba, w, h, x0, y0, x1, y1), rw = x1 - x0;
+        marcadores = detectarMarcadores(rec, rw, y1 - y0, modelo.ids, { escalas: [400, 520, 640, 800].filter(e => e <= rw), refinar: false });
+        marcadores.forEach(m => m.cantos = m.cantos.map(c => ({ x: c.x + x0, y: c.y + y0 })));
+        if (marcadores.length) refinarMarcadores(rgba, w, h, marcadores);
+      } else {
+        marcadores = detectarMarcadores(rgba, w, h, modelo.ids, opc);
+      }
+      const enc = encaixar(modelo.geo, marcadores);
+      if (!enc || enc.ids.length < 3) continue;
+      const r = Object.assign({ ok: true, marcadores, enc, modo }, analisar(rgba, w, h, modelo, enc));
+      if (!melhor || r.confere > melhor.confere) melhor = r;
+      if (r.confere >= modelo.cfg.CONFERE_MIN) break;
     }
-    if (!enc) {
-      marcadores = detectarMarcadores(rgba, w, h, modelo.ids, opc);
-      enc = encaixar(modelo.geo, marcadores);
-    }
-    if (!enc || enc.ids.length < 3) return { ok: false, marcadores, motivo: 'Não achei pelo menos 3 marcadores da placa.' };
-    const r = analisar(rgba, w, h, modelo, enc);
-    return Object.assign({ ok: true, marcadores, enc, ms: Date.now() - t0 }, r);
+    if (!melhor) return { ok: false, motivo: 'Não achei pelo menos 3 marcadores da placa.' };
+    melhor.ms = Date.now() - t0;
+    melhor.encaixeRuim = melhor.confere < modelo.cfg.CONFERE_MIN;
+    return melhor;
   }
 
   const api = { CFG, refinarMarcadores, reduzir, detectarMarcadores, encaixar, criarModelo, analisar, contar, aplicar, nitidez, inv3, bitsDoMarcador };

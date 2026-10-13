@@ -82,7 +82,8 @@
   .aviso.extra{background:#fde3e0;color:#9a1d12;border:1.5px solid #f3a49b}
   .aviso.duvida{background:#fff6cc;color:#6b5600;border:1.5px solid #ecd56a}
   .aviso.info{background:#e8f0e4;color:#2f5321}
-  .aviso button{margin-top:8px;font-size:13.5px;font-weight:700;padding:8px 12px;border-radius:8px;border:0;background:#9a1d12;color:#fff;cursor:pointer}
+  .aviso button{margin-top:8px;margin-right:6px;font-size:13.5px;font-weight:700;padding:9px 12px;border-radius:8px;border:0;background:#9a1d12;color:#fff;cursor:pointer}
+  .aviso button.leve{background:#fff;color:#9a1d12;border:1.5px solid #f3a49b}
   .lin{display:flex;justify-content:space-between;align-items:center;font-size:14px;gap:8px}
   .lin label{display:flex;gap:6px;align-items:center}
   #ocupado{position:fixed;inset:0;background:rgba(22,32,27,.75);color:#f3bd3e;display:none;align-items:center;justify-content:center;font-size:20px;font-weight:700;z-index:9;text-align:center;padding:20px}
@@ -163,7 +164,7 @@
   <p class="hint">Toque num furo pra trocar: ocupado ↔ vazio. Furo amarelo = o app ficou em dúvida, decida você.</p>
 
   <div class="row">
-    <button class="btn sec" id="btDescartar">Descartar</button>
+    <button class="btn sec" id="btDescartar">Contar de novo</button>
     <button class="btn pri" id="btSalvar">Salvar e nova contagem</button>
   </div>
   <p class="hint" id="porqueNao" style="text-align:center"></p>
@@ -189,6 +190,7 @@ let estados = [];                 // estado atual de cada furo (editável)
 let manual = [];                  // furo foi corrigido à mão?
 let historico = [];
 let alertaConferido = false;
+let repeticoes = 0;               // fotos refeitas seguidas por encaixe ruim
 
 // ---------- telas ----------
 function mostrar(id) {
@@ -435,6 +437,9 @@ function contarFoto() {
     }
     res = r; estados = r.furos.map(f => f.estado); manual = estados.map(() => false); historico = []; alertaConferido = false;
     vistaCv = null;
+    // gêmeo não bateu com a foto (tremeu na hora): na câmera, tenta de novo sozinho
+    if (r.encaixeRuim && foto.origem === 'camera' && repeticoes < 2) { repeticoes++; armado = true; abrirCamera('Foto tremida, tirando outra…'); return; }
+    repeticoes = 0;
     if (r.anomalias.length) BEEP.alerta(); else BEEP.ok();
     mostrar('telaResultado');
     desenhar();
@@ -489,15 +494,17 @@ function atualizarPlacar() {
   const c = { ocupado: 0, vazio: 0, duvidoso: 0 }; estados.forEach(e => c[e]++);
   $('num').textContent = c.ocupado; $('nOcup').textContent = c.ocupado; $('nVazio').textContent = c.vazio; $('nDuv').textContent = c.duvidoso;
   const av = [];
+  if (res.encaixeRuim) av.push('<div class="aviso duvida"><b>Encaixe imperfeito</b> (foto tremida ou torta): confira os círculos ou conte de novo.</div>');
   if (res.anomalias.length && !alertaConferido) {
     const furos = [...new Set(res.anomalias.map(a => a.pertoDoFuro))].join(', ');
-    av.push(`<div class="aviso extra"><b>Confira a placa:</b> pode ter grão extra por cima, perto do furo ${furos} (círculo vermelho). ` +
-      `Tire o excesso e conte de novo, ou confirme se está tudo certo.<br><button id="btConferi">Conferi — não há grão extra</button></div>`);
+    av.push(`<div class="aviso extra"><b>Grão extra por cima da placa?</b> Perto do furo ${furos} (círculo vermelho).<br>` +
+      `<button id="btRecontar">Tirei o excesso — contar de novo</button><button class="leve" id="btConferi">Não tem grão extra</button></div>`);
   } else if (res.anomalias.length) av.push('<div class="aviso info">Alerta de grão extra conferido por você.</div>');
   if (c.duvidoso) av.push(`<div class="aviso duvida"><b>${c.duvidoso} furo(s) em dúvida</b> (amarelo): toque em cada um pra dizer se tem grão.</div>`);
   av.push('<div class="aviso info">Lembre: 1 furo ocupado = 1 grão. Grão duplo dentro do furo o app ainda não detecta.</div>');
   $('avisos').innerHTML = av.join('');
   const bt = $('btConferi'); if (bt) bt.onclick = () => { alertaConferido = true; desenhar(); };
+  const br = $('btRecontar'); if (br) br.onclick = () => novaContagem(true);
   const motivo = c.duvidoso ? 'Resolva os furos amarelos pra salvar.' : (res.anomalias.length && !alertaConferido) ? 'Confira o alerta de grão extra pra salvar.' : '';
   $('btSalvar').disabled = !!motivo; $('porqueNao').textContent = motivo;
 }
@@ -520,11 +527,15 @@ quadroCv.addEventListener('click', e => {
 $('btDesfazer').onclick = () => { if (historico.length) { const h = historico.pop(); estados = h.estados; manual = h.manual; desenhar(); } };
 $('verVista').onchange = desenhar;
 
-function novaContagem() {
+// mesmaPlaca: recontar a placa que está na frente (sem precisar tirar ela de vista)
+function novaContagem(mesmaPlaca) {
   res = null;
-  if (foto && foto.origem === 'camera') abrirCamera(); else mostrar('telaInicio');
+  if (mesmaPlaca) armado = true;
+  if (foto && foto.origem === 'camera') abrirCamera(mesmaPlaca ? 'Contando de novo…' : undefined);
+  else if (mesmaPlaca) { mostrar('telaInicio'); $('inFoto').click(); }
+  else mostrar('telaInicio');
 }
-$('btDescartar').onclick = () => { if (confirm('Descartar esta contagem?')) novaContagem(); };
+$('btDescartar').onclick = () => novaContagem(true);
 $('btSalvar').onclick = () => {
   const s = lerSessao();
   s.push({

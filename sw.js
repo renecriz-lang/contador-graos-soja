@@ -1,4 +1,4 @@
-const CACHE = 'contador-soja-v5';
+const CACHE = 'contador-soja-v6';
 
 const SHELL_PATHS = [
   './',
