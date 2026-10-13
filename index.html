@@ -119,7 +119,7 @@
     <p class="hint" style="margin-top:0">• Um grão por furo. Passe a mão por cima pra tirar o excesso.<br>
     • Celular paralelo à placa, com os 4 marcadores aparecendo.<br>
     • <b>Sem flash</b> e sem sol direto (reflexo e sombra atrapalham).<br>
-    • Tire a mão e espere: quando a placa ficar firme e nítida, o app tira a foto sozinho e apita.<br>
+    • Aponte pra placa: achou os marcadores, o app tira a foto sozinho, conta e apita.<br>
     • Dois apitos agudos = tudo certo. Apito grave = confira a placa.</p>
   </div>
 </div></section>
@@ -241,14 +241,14 @@ $('btLimpar').onclick = () => { if (confirm('Apagar todas as contagens?')) grava
 desenharSessao();
 
 // =====================================================================
-// CÂMERA AO VIVO: acompanha os marcadores e dispara sozinha quando a placa
-// está inteira, perto, firme e com luz boa (nitidez só aparece como aviso).
+// CÂMERA AO VIVO: achou os marcadores (3 ou 4) -> tira a foto e conta.
+// Os outros indicadores só informam, não seguram o disparo.
 // =====================================================================
 const AO_VIVO = {
   LARG: [400, 480, 560],   // escalas alternadas a cada quadro (o detector JS é sensível ao tamanho)
   PX_MM_MIN: 5,            // resolução mínima na foto final (furo de 8,5 mm >= ~42 px)
   MOV_MAX: 0.004,          // movimento máx. dos cantos entre quadros (fração da largura)
-  QUADROS_FIRME: 3,        // quadros seguidos firmes (~0,4 s) antes de disparar
+  QUADROS: 1,              // quadros com os marcadores achados antes de disparar
 };
 let stream = null, rodando = false, quadro = 0, seguidos = 0, picoNit = 0;
 let armado = true, semPlaca = 0;   // depois de contar, só dispara de novo quando a placa sair de vista (troca de amostra)
@@ -343,10 +343,9 @@ function avaliarQuadro() {
   };
   semPlaca = marc.length < 2 ? semPlaca + 1 : 0;
   if (!armado && semPlaca >= 2) armado = true;
-  // nitidez só informa (placa parada já sai nítida o bastante pros furos); quem dispara é marcador + perto + firme + luz
-  const pronto = ok.marc && ok.perto && ok.firme && ok.luz;
+  const pronto = ok.marc && !!enc;
   seguidos = pronto && armado ? seguidos + 1 : 0;
-  const precisa = AO_VIVO.QUADROS_FIRME;
+  const precisa = AO_VIVO.QUADROS;
 
   $('chMarc').textContent = `marcadores ${marc.length}/${total}`;
   $('chMarc').classList.toggle('ok', marc.length >= total || (ok.marc && seguidos > 0));
@@ -357,9 +356,7 @@ function avaliarQuadro() {
   $('camMsg').textContent =
     !armado ? 'Troque a amostra: tire a placa de vista (ou passe a mão) pra liberar a próxima foto' :
     !ok.marc ? (marc.length ? `Achei ${marc.length} marcador(es). Enquadre a placa inteira.` : 'Aponte para a placa') :
-    !ok.perto ? 'Aproxime o celular da placa' :
-    !ok.luz ? (luz <= 45 ? 'Pouca luz' : 'Luz forte demais / reflexo') :
-    !ok.firme ? 'Segure firme e tire a mão da placa' : 'Pronto, segure…';
+    'Achei a placa!';
 
   desenharAoVivo(marc, enc);
   if (seguidos >= precisa) capturarDoVideo(marc);
