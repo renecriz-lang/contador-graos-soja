@@ -1,9 +1,13 @@
-const CACHE = 'contador-soja-v1';
+const CACHE = 'contador-soja-v2';
 
 const SHELL_PATHS = [
   './',
   './index.html',
-  './contagem.js',
+  './placa.js',
+  './placas/placa-24.json',
+  './vendor/js-aruco2/cv.js',
+  './vendor/js-aruco2/aruco.js',
+  './vendor/js-aruco2/aruco_4x4_1000.js',
   './manifest.webmanifest',
   './icon-192.png',
   './icon-512.png',

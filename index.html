@@ -8,6 +8,7 @@
 <!-- PWA -->
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#16201b">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -18,6 +19,7 @@
     --bg:#f1ede2;--paper:#fffdf8;--data:#16201b;--data-2:#1f2c25;
     --gold:#d99a1f;--gold-deep:#a9781b;--crop:#6fa348;--ok:#57d6bd;
     --ink:#23201a;--muted:#7d735f;--line:#e3dccb;--warn:#c4521f;
+    --c-ocupado:#3cc83c;--c-vazio:#28aaff;--c-duvida:#ffdc00;--c-extra:#ff2d2d;
     --body:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
     --mono:ui-monospace,'Cascadia Mono',Consolas,monospace;
   }
@@ -34,16 +36,13 @@
 
   .card{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:18px;margin-top:16px}
   .card h2{font-family:var(--mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
-
-  .seg{display:flex;gap:6px}
-  .seg button{flex:1;font-size:14px;padding:10px 6px;border:1.5px solid var(--line);background:#fff;color:var(--muted);border-radius:9px;cursor:pointer}
-  .seg button.on{background:var(--data);border-color:var(--data);color:#f0e9d7;font-weight:700}
   .hint{font-size:12.5px;color:var(--muted);margin-top:8px}
 
   .btn{display:block;width:100%;font-size:17px;font-weight:700;padding:15px;border-radius:12px;border:0;cursor:pointer;margin-top:12px}
   .btn.pri{background:var(--data);color:#f3bd3e}
   .btn.sec{background:#fff;color:var(--ink);border:1.5px solid var(--line)}
   .btn.small{font-size:14px;padding:10px;margin-top:0}
+  .btn:disabled{opacity:.45;cursor:default}
   .row{display:flex;gap:8px;margin-top:12px}
   .row .btn{margin-top:0}
 
@@ -53,34 +52,40 @@
   .sessao li button{background:none;border:0;color:var(--muted);font-size:20px;padding:0 6px;cursor:pointer}
   .total{display:flex;justify-content:space-between;align-items:baseline;margin-top:12px;padding-top:12px;border-top:2px solid var(--data)}
   .total b{font-family:var(--mono);font-size:28px}
-  .vazio{color:var(--muted);font-size:14px}
+  .nada{color:var(--muted);font-size:14px}
+  .placaInfo{font-family:var(--mono);font-size:14px}
 
   /* ---- câmera ---- */
   #telaCamera{background:#000;position:fixed;inset:0}
-  #video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-  .moldura{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);
-    border:3px solid rgba(255,255,255,.9);border-radius:10px;box-shadow:0 0 0 9999px rgba(0,0,0,.45);pointer-events:none}
-  .moldura.pronto{border-color:var(--ok)}
-  .chips{position:absolute;top:14px;left:0;right:0;display:flex;justify-content:center;gap:8px}
-  .chip{font-family:var(--mono);font-size:12.5px;padding:6px 10px;border-radius:20px;background:rgba(0,0,0,.6);color:#bbb}
+  #video,#sobre{position:absolute;inset:0;width:100%;height:100%}
+  #video{object-fit:contain}
+  #sobre{pointer-events:none}
+  .chips{position:absolute;top:14px;left:0;right:0;display:flex;justify-content:center;flex-wrap:wrap;gap:6px;padding:0 10px}
+  .chip{font-family:var(--mono);font-size:12px;padding:5px 9px;border-radius:20px;background:rgba(0,0,0,.6);color:#bbb}
   .chip.ok{color:#0c1a14;background:var(--ok)}
   .camBase{position:absolute;bottom:0;left:0;right:0;padding:16px 20px 26px;display:flex;align-items:center;justify-content:space-between}
   .disparo{width:76px;height:76px;border-radius:50%;border:5px solid #fff;background:rgba(255,255,255,.25);cursor:pointer}
   .disparo.pronto{background:var(--ok)}
   .camBtn{background:rgba(0,0,0,.55);color:#fff;border:0;border-radius:10px;padding:10px 14px;font-size:14px;cursor:pointer;min-width:84px}
-  .camMsg{position:absolute;left:0;right:0;text-align:center;color:#fff;font-size:14px;text-shadow:0 1px 3px #000;padding:0 20px}
+  .camMsg{position:absolute;left:0;right:0;bottom:120px;text-align:center;color:#fff;font-size:15px;text-shadow:0 1px 3px #000;padding:0 20px}
+  .barra{position:absolute;left:20%;right:20%;bottom:108px;height:5px;border-radius:3px;background:rgba(255,255,255,.2);overflow:hidden}
+  .barra i{display:block;height:100%;width:0;background:var(--ok);transition:width .15s}
 
   /* ---- resultado ---- */
-  .placar{display:flex;align-items:baseline;justify-content:space-between;background:var(--data);color:#f0e9d7;border-radius:14px;padding:14px 18px;margin-top:14px}
+  .placar{display:flex;align-items:flex-end;justify-content:space-between;background:var(--data);color:#f0e9d7;border-radius:14px;padding:14px 18px;margin-top:14px;gap:10px}
   .placar b{font-family:var(--mono);font-size:44px;color:#f3bd3e;line-height:1}
   .placar small{color:#a9b3a6;font-size:12.5px;display:block}
-  #quadro{width:100%;display:block;border-radius:10px;margin-top:12px;touch-action:manipulation;background:#ddd}
-  .avisos{margin-top:10px}
-  .avisos p{background:#fbe9dc;color:var(--warn);border-radius:9px;padding:8px 12px;font-size:13.5px;margin-top:6px}
-  input[type=range]{width:100%;margin-top:6px;accent-color:var(--gold-deep)}
-  .lin{display:flex;justify-content:space-between;align-items:center;font-size:14px}
+  .mini{font-family:var(--mono);font-size:13px;text-align:right;line-height:1.7}
+  .mini span{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:middle}
+  #quadro{width:100%;display:block;border-radius:10px;margin-top:12px;touch-action:manipulation;background:#222}
+  .aviso{border-radius:10px;padding:10px 12px;font-size:14px;margin-top:10px}
+  .aviso.extra{background:#fde3e0;color:#9a1d12;border:1.5px solid #f3a49b}
+  .aviso.duvida{background:#fff6cc;color:#6b5600;border:1.5px solid #ecd56a}
+  .aviso.info{background:#e8f0e4;color:#2f5321}
+  .aviso button{margin-top:8px;font-size:13.5px;font-weight:700;padding:8px 12px;border-radius:8px;border:0;background:#9a1d12;color:#fff;cursor:pointer}
+  .lin{display:flex;justify-content:space-between;align-items:center;font-size:14px;gap:8px}
   .lin label{display:flex;gap:6px;align-items:center}
-  #ocupado{position:fixed;inset:0;background:rgba(22,32,27,.75);color:#f3bd3e;display:none;align-items:center;justify-content:center;font-size:20px;font-weight:700;z-index:9}
+  #ocupado{position:fixed;inset:0;background:rgba(22,32,27,.75);color:#f3bd3e;display:none;align-items:center;justify-content:center;font-size:20px;font-weight:700;z-index:9;text-align:center;padding:20px}
   #ocupado.on{display:flex}
 </style>
 </head>
@@ -90,18 +95,14 @@
 <section class="tela on" id="telaInicio"><div class="wrap">
   <div class="eyebrow">PMS · etapa de contagem</div>
   <h1>Contador de <span>grãos de soja</span></h1>
-  <p class="sub">Fotografe ~100 grãos espalhados, confira os círculos e corrija tocando.</p>
+  <p class="sub">Placa com furos e marcadores: um grão por furo. O app encaixa o gêmeo digital da placa na foto e confere furo por furo.</p>
 
   <div class="card">
-    <h2>Fundo da foto</h2>
-    <div class="seg" id="segModo">
-      <button data-modo="claro" class="on">Fundo claro</button>
-      <button data-modo="led">LED aceso por baixo</button>
-    </div>
-    <p class="hint" id="dicaModo"></p>
+    <h2>Placa</h2>
+    <p class="placaInfo" id="placaInfo">carregando…</p>
   </div>
 
-  <button class="btn pri" id="btAbrirCamera">Abrir câmera</button>
+  <button class="btn pri" id="btAbrirCamera">Contar com a câmera</button>
   <label class="btn sec" style="text-align:center">Usar foto da galeria
     <input type="file" accept="image/*" id="inFoto" hidden>
   </label>
@@ -109,32 +110,36 @@
   <div class="card">
     <h2>Contagens salvas</h2>
     <ul class="sessao" id="listaSessao"></ul>
-    <div class="total" id="caixaTotal"><span>Total</span><b id="total">0</b></div>
+    <div class="total"><span>Total</span><b id="total">0</b></div>
     <button class="btn sec small" id="btLimpar" style="margin-top:12px">Limpar tudo</button>
   </div>
 
   <div class="card">
-    <h2>Dicas pra contar certo</h2>
-    <p class="hint" style="margin-top:0">• Uns 100 grãos por foto, com folga de meio grão entre eles.<br>
-    • Celular reto por cima, perto o bastante pra bandeja encher a moldura.<br>
-    • Sem sol direto (faz sombra e mancha). O LED aceso por baixo é o ideal.<br>
-    • Espere a moldura ficar verde: foco ok e celular firme.</p>
+    <h2>Como contar certo</h2>
+    <p class="hint" style="margin-top:0">• Um grão por furo. Passe a mão por cima pra tirar o excesso.<br>
+    • Celular paralelo à placa, com os 4 marcadores aparecendo.<br>
+    • <b>Sem flash</b> e sem sol direto (reflexo e sombra atrapalham).<br>
+    • Tire a mão e espere: quando a placa ficar firme e nítida, o app tira a foto sozinho e apita.<br>
+    • Dois apitos agudos = tudo certo. Apito grave = confira a placa.</p>
   </div>
 </div></section>
 
 <!-- ========== CÂMERA ========== -->
 <section class="tela" id="telaCamera">
   <video id="video" playsinline muted autoplay></video>
-  <div class="moldura" id="moldura"></div>
+  <canvas id="sobre"></canvas>
   <div class="chips">
-    <span class="chip" id="chFoco">foco</span>
+    <span class="chip" id="chMarc">marcadores 0/4</span>
+    <span class="chip" id="chPerto">perto</span>
     <span class="chip" id="chFirme">firme</span>
+    <span class="chip" id="chFoco">nítido</span>
     <span class="chip" id="chLuz">luz</span>
   </div>
-  <p class="camMsg" id="camMsg">Encaixe a bandeja dentro da moldura</p>
+  <p class="camMsg" id="camMsg">Aponte para a placa</p>
+  <div class="barra"><i id="barra"></i></div>
   <div class="camBase">
     <button class="camBtn" id="btVoltarCam">Voltar</button>
-    <button class="disparo" id="btDisparo" aria-label="Tirar foto"></button>
+    <button class="disparo" id="btDisparo" aria-label="Tirar foto agora"></button>
     <span style="min-width:84px"></span>
   </div>
 </section>
@@ -142,72 +147,92 @@
 <!-- ========== RESULTADO ========== -->
 <section class="tela" id="telaResultado"><div class="wrap">
   <div class="placar">
-    <div><small>Grãos nesta foto</small><b id="num">0</b></div>
-    <div style="text-align:right"><small>toque num círculo = remove</small><small>toque no vazio = adiciona</small></div>
-  </div>
-  <div class="avisos" id="avisos"></div>
-  <canvas id="quadro"></canvas>
-
-  <div class="card">
-    <div class="lin"><span>Sensibilidade</span><span id="valAjuste" style="font-family:var(--mono)">0</span></div>
-    <input type="range" id="ajuste" min="-30" max="30" step="2" value="0">
-    <p class="hint">Se está pulando grão, arraste pra esquerda. Se marca sujeira/sombra, pra direita. (Recontar apaga as correções manuais.)</p>
-    <div class="lin" style="margin-top:10px">
-      <label><input type="checkbox" id="verMascara"> ver o que o app enxerga</label>
-      <button class="btn sec small" id="btDesfazer" style="width:auto;padding:8px 14px">Desfazer</button>
+    <div><small>Grãos (furos ocupados)</small><b id="num">0</b></div>
+    <div class="mini">
+      <div><span style="background:var(--c-ocupado)"></span>ocupados <b id="nOcup">0</b></div>
+      <div><span style="background:var(--c-vazio)"></span>vazios <b id="nVazio">0</b></div>
+      <div><span style="background:var(--c-duvida)"></span>duvidosos <b id="nDuv">0</b></div>
     </div>
   </div>
+  <div id="avisos"></div>
+  <canvas id="quadro"></canvas>
+  <div class="lin" style="margin-top:8px">
+    <label><input type="checkbox" id="verVista"> ver gêmeo digital (vista de cima)</label>
+    <button class="btn sec small" id="btDesfazer" style="width:auto;padding:8px 14px">Desfazer</button>
+  </div>
+  <p class="hint">Toque num furo pra trocar: ocupado ↔ vazio. Furo amarelo = o app ficou em dúvida, decida você.</p>
 
   <div class="row">
-    <button class="btn sec" id="btRefazer">Refazer foto</button>
-    <button class="btn pri" id="btSalvar">Salvar contagem</button>
+    <button class="btn sec" id="btDescartar">Descartar</button>
+    <button class="btn pri" id="btSalvar">Salvar e nova contagem</button>
   </div>
+  <p class="hint" id="porqueNao" style="text-align:center"></p>
 </div></section>
 
 <div id="ocupado">Contando…</div>
 
-<script src="contagem.js"></script>
+<script src="vendor/js-aruco2/cv.js"></script>
+<script src="vendor/js-aruco2/aruco.js"></script>
+<script src="vendor/js-aruco2/aruco_4x4_1000.js"></script>
+<script src="placa.js"></script>
 <script>
 'use strict';
 const $ = id => document.getElementById(id);
-const LADO_MAX = 1400;          // lado maior da imagem processada (px)
-const CHAVE = 'contador-soja-sessao';
+const LADO_MAX = 2000;            // lado maior da foto analisada (px)
+const CHAVE = 'contador-soja-placa-sessao';
+const ARQ_PLACA = 'placas/placa-24.json';
 
-let modo = localStorage.getItem('contador-soja-modo') || 'claro';
-let foto = null;                // { canvas, w, h, origem: 'camera'|'galeria', nitida: bool }
-let res = null;                 // resultado da contagem
-let graos = [];                 // marcações atuais (editáveis)
-let historico = [];             // pra desfazer
+let modelo = null;                // gêmeo digital (máscaras prontas)
+let foto = null;                  // { canvas, w, h, origem }
+let res = null;                   // resultado do Placa.contar
+let estados = [];                 // estado atual de cada furo (editável)
+let manual = [];                  // furo foi corrigido à mão?
+let historico = [];
+let alertaConferido = false;
 
 // ---------- telas ----------
 function mostrar(id) {
   document.querySelectorAll('.tela').forEach(t => t.classList.toggle('on', t.id === id));
   window.scrollTo(0, 0);
 }
+function ocupado(msg) { $('ocupado').textContent = msg || ''; $('ocupado').classList.toggle('on', !!msg); }
 
-// ---------- modo de fundo ----------
-const DICAS = {
-  claro: 'Grão creme sobre bandeja branca. Funciona, mas sofre com sombra e sol.',
-  led: 'Painel aceso por baixo: o grão vira silhueta escura. É o modo mais preciso.'
-};
-function aplicarModo() {
-  document.querySelectorAll('#segModo button').forEach(b => b.classList.toggle('on', b.dataset.modo === modo));
-  $('dicaModo').textContent = DICAS[modo];
-  localStorage.setItem('contador-soja-modo', modo);
+// ---------- placa ----------
+fetch(ARQ_PLACA).then(r => r.json()).then(geo => {
+  modelo = Placa.criarModelo(geo);
+  $('placaInfo').textContent = `${geo.nome} · ${geo.furos.length} furos · ${geo.largura}×${geo.altura} mm · marcadores ${geo.marcadores.map(m => m.id).join(', ')}`;
+}).catch(() => { $('placaInfo').textContent = 'Não consegui carregar a geometria da placa.'; });
+
+// ---------- sons ----------
+let audio = null;
+function prepararSom() {
+  try { audio = audio || new (window.AudioContext || window.webkitAudioContext)(); audio.resume(); } catch (e) { audio = null; }
 }
-$('segModo').onclick = e => { if (e.target.dataset.modo) { modo = e.target.dataset.modo; aplicarModo(); } };
-aplicarModo();
+function tom(freq, ini, dur, tipo) {
+  if (!audio) return;
+  const o = audio.createOscillator(), g = audio.createGain(), t = audio.currentTime + ini;
+  o.type = tipo || 'sine'; o.frequency.value = freq;
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.35, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(g).connect(audio.destination); o.start(t); o.stop(t + dur + 0.02);
+}
+const BEEP = {
+  ok() { tom(1320, 0, 0.09); tom(1760, 0.13, 0.12); vibrar(60); },
+  alerta() { tom(330, 0, 0.22, 'square'); tom(330, 0.3, 0.22, 'square'); tom(262, 0.6, 0.35, 'square'); vibrar([150, 80, 150, 80, 300]); },
+  erro() { tom(200, 0, 0.4, 'sawtooth'); vibrar(400); },
+};
+function vibrar(p) { try { navigator.vibrate && navigator.vibrate(p); } catch (e) {} }
 
 // ---------- sessão (contagens salvas) ----------
 function lerSessao() { try { return JSON.parse(localStorage.getItem(CHAVE)) || []; } catch { return []; } }
 function gravarSessao(s) { localStorage.setItem(CHAVE, JSON.stringify(s)); desenharSessao(); }
 function desenharSessao() {
   const s = lerSessao(), ul = $('listaSessao');
-  ul.innerHTML = s.length ? '' : '<li class="vazio">Nenhuma contagem ainda.</li>';
+  ul.innerHTML = s.length ? '' : '<li class="nada">Nenhuma contagem ainda.</li>';
   s.forEach((c, i) => {
     const li = document.createElement('li');
-    li.innerHTML = `<span>Foto ${i + 1} <small style="color:var(--muted)">· ${c.hora}</small></span><span><b>${c.n}</b><button title="apagar">×</button></span>`;
-    li.querySelector('button').onclick = () => { if (confirm(`Apagar a foto ${i + 1}?`)) { s.splice(i, 1); gravarSessao(s); } };
+    const obs = [c.corrigidos ? `${c.corrigidos} corrigido(s)` : '', c.alerta ? 'alerta conferido' : ''].filter(Boolean).join(' · ');
+    li.innerHTML = `<span>Placa ${i + 1} <small style="color:var(--muted)">· ${c.hora}${obs ? ' · ' + obs : ''}</small></span><span><b>${c.n}</b><button title="apagar">×</button></span>`;
+    li.querySelector('button').onclick = () => { if (confirm(`Apagar a placa ${i + 1}?`)) { s.splice(i, 1); gravarSessao(s); } };
     ul.appendChild(li);
   });
   $('total').textContent = s.reduce((a, c) => a + c.n, 0);
@@ -215,169 +240,303 @@ function desenharSessao() {
 $('btLimpar').onclick = () => { if (confirm('Apagar todas as contagens?')) gravarSessao([]); };
 desenharSessao();
 
-// ---------- câmera ao vivo ----------
-let stream = null, laco = null, pedidoFoto = null, prevGray = null, picoNitidez = 0, prontoSeguidos = 0;
-const video = $('video'), mini = document.createElement('canvas'), miniCtx = mini.getContext('2d', { willReadFrequently: true });
-mini.width = mini.height = 160;
-
-function geometriaMoldura() {
-  const W = innerWidth, H = innerHeight, lado = Math.round(Math.min(W, H * 0.72) * 0.9);
-  const m = $('moldura'); m.style.width = m.style.height = lado + 'px';
-  $('camMsg').style.top = `calc(46% + ${lado / 2 + 14}px)`;
-  return { W, H, lado, cx: W / 2, cy: H * 0.46 };
-}
-
-$('btAbrirCamera').onclick = async () => {
-  try {
-    stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: { ideal: 'environment' }, width: { ideal: 3840 }, height: { ideal: 2160 } }, audio: false
-    });
-  } catch (e) {
-    alert('Não consegui abrir a câmera (' + e.name + '). Use "foto da galeria".');
-    return;
-  }
-  video.srcObject = stream;
-  mostrar('telaCamera'); geometriaMoldura();
-  picoNitidez = 0; prontoSeguidos = 0; prevGray = null;
-  laco = setInterval(avaliarAoVivo, 250);
+// =====================================================================
+// CÂMERA AO VIVO: acompanha os marcadores e dispara sozinha quando a placa
+// está inteira, perto, firme, nítida e com luz boa.
+// =====================================================================
+const AO_VIVO = {
+  LARG: [400, 480, 560],   // escalas alternadas a cada quadro (o detector JS é sensível ao tamanho)
+  PX_MM_MIN: 5,            // resolução mínima na foto final (furo de 8,5 mm >= ~42 px)
+  MOV_MAX: 0.004,          // movimento máx. dos cantos entre quadros (fração da largura)
+  QUADROS_FIRME: 6,        // quadros seguidos firmes (~1 s) antes de disparar
+  ESPERA_3_MARC: 12,       // com só 3 marcadores, espera mais quadros firmes antes de aceitar
 };
-addEventListener('resize', () => { if ($('telaCamera').classList.contains('on')) geometriaMoldura(); });
+let stream = null, rodando = false, quadro = 0, seguidos = 0, picoNit = 0;
+let armado = true, semPlaca = 0;
+let vistos = new Map();            // id -> { cantos, quadro }: memória curta (o detector oscila entre quadros)
+const MEMORIA = 3;                 // quadros que um marcador "continua visto" depois de sumir
+const nitCv = document.createElement('canvas'), nitCtx = nitCv.getContext('2d', { willReadFrequently: true });
+nitCv.width = 320; nitCv.height = 320;   // depois de contar, só dispara de novo quando a placa sair de vista (troca de amostra)
+const video = $('video'), sobre = $('sobre'), sctx = sobre.getContext('2d');
+const peq = document.createElement('canvas'), pctx = peq.getContext('2d', { willReadFrequently: true });
 
+$('btAbrirCamera').onclick = abrirCamera;
+async function abrirCamera(msg) {
+  if (!modelo) return alert('A placa ainda não carregou.');
+  prepararSom();
+  if (!stream) {
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: 'environment' }, width: { ideal: 3840 }, height: { ideal: 2160 } }, audio: false
+      });
+    } catch (e) {
+      alert('Não consegui abrir a câmera (' + e.name + '). Use "foto da galeria".');
+      return;
+    }
+    video.srcObject = stream;
+  }
+  mostrar('telaCamera');
+  seguidos = 0; picoNit = 0; quadro = 0; vistos = new Map();
+  $('camMsg').textContent = typeof msg === 'string' ? msg : 'Aponte para a placa';
+  if (!rodando) { rodando = true; laco(); }
+}
+function pararLaco() { rodando = false; }
 function fecharCamera() {
-  clearInterval(laco); laco = null; pedidoFoto = null;
-  if (stream) stream.getTracks().forEach(t => t.stop()); stream = null;
+  pararLaco();
+  if (stream) stream.getTracks().forEach(t => t.stop());
+  stream = null;
 }
 $('btVoltarCam').onclick = () => { fecharCamera(); mostrar('telaInicio'); };
 
-// retângulo da moldura em coordenadas do vídeo (o vídeo é exibido em "cover")
-function molduraNoVideo() {
-  const g = geometriaMoldura(), vw = video.videoWidth, vh = video.videoHeight;
-  const s = Math.max(g.W / vw, g.H / vh), ox = (g.W - vw * s) / 2, oy = (g.H - vh * s) / 2;
-  return { x: (g.cx - g.lado / 2 - ox) / s, y: (g.cy - g.lado / 2 - oy) / s, lado: g.lado / s };
+function laco() {
+  if (!rodando) return;
+  const t0 = performance.now();
+  try { avaliarQuadro(); } catch (e) { console.error(e); }
+  if (rodando) setTimeout(laco, Math.max(30, 140 - (performance.now() - t0)));
 }
 
-// a cada 250 ms: foco (nitidez), firmeza (quanto mudou desde o quadro anterior) e luz
-function avaliarAoVivo() {
-  if (!video.videoWidth) return;
-  const r = molduraNoVideo(), c = r.lado * 0.3;        // centro da moldura
-  miniCtx.drawImage(video, r.x + r.lado / 2 - c / 2, r.y + r.lado / 2 - c / 2, c, c, 0, 0, 160, 160);
-  const d = miniCtx.getImageData(0, 0, 160, 160).data;
-  const nit = Contagem.nitidez(d, 160, 160);
-  const gray = new Float32Array(160 * 160); let luz = 0;
-  for (let i = 0, p = 0; i < gray.length; i++, p += 4) { gray[i] = (d[p] + d[p + 1] + d[p + 2]) / 3; luz += gray[i]; }
-  luz /= gray.length;
-  let mov = 99;
-  if (prevGray) { mov = 0; for (let i = 0; i < gray.length; i++) mov += Math.abs(gray[i] - prevGray[i]); mov /= gray.length; }
-  prevGray = gray;
-  picoNitidez = Math.max(nit, picoNitidez * 0.97);   // pico recente, vai esquecendo devagar
-  const foco = nit > 20 && nit >= 0.6 * picoNitidez, firme = mov < 4, luzOk = luz > 60 && luz < 240;
-  $('chFoco').classList.toggle('ok', foco); $('chFirme').classList.toggle('ok', firme); $('chLuz').classList.toggle('ok', luzOk);
-  const pronto = foco && firme && luzOk;
-  prontoSeguidos = pronto ? prontoSeguidos + 1 : 0;
-  $('moldura').classList.toggle('pronto', prontoSeguidos >= 2);
-  $('btDisparo').classList.toggle('pronto', prontoSeguidos >= 2);
-  if (pedidoFoto) {
-    if (prontoSeguidos >= 2) capturar(true);
-    else if (Date.now() - pedidoFoto > 3000) capturar(false);
+// vídeo exibido em "contain" (quadro inteiro): converte ponto do vídeo para a tela
+function vidParaTela() {
+  const W = sobre.clientWidth, H = sobre.clientHeight, vw = video.videoWidth, vh = video.videoHeight;
+  const s = Math.min(W / vw, H / vh);
+  return { s, ox: (W - vw * s) / 2, oy: (H - vh * s) / 2, W, H };
+}
+
+function avaliarQuadro() {
+  const vw = video.videoWidth, vh = video.videoHeight;
+  if (!vw || !$('telaCamera').classList.contains('on')) return;
+  const q = quadro++, larg = AO_VIVO.LARG[q % AO_VIVO.LARG.length], k = vw / larg, alt = Math.round(vh / k);
+  if (peq.width !== larg || peq.height !== alt) { peq.width = larg; peq.height = alt; }
+  pctx.drawImage(video, 0, 0, larg, alt);
+  const img = pctx.getImageData(0, 0, larg, alt);
+  const agora = Placa.detectarMarcadores(img.data, larg, alt, modelo.ids, { escalas: [larg], refinar: false });
+  agora.forEach(m => m.cantos = m.cantos.map(c => ({ x: c.x * k, y: c.y * k })));   // para coordenadas do vídeo
+
+  // movimento: compara com a última posição conhecida de cada marcador
+  let mov = Infinity, sm = 0, nm = 0;
+  for (const m of agora) {
+    const a = vistos.get(m.id);
+    if (a && q - a.quadro <= MEMORIA) m.cantos.forEach((c, i) => { sm += Math.hypot(c.x - a.cantos[i].x, c.y - a.cantos[i].y); nm++; });
+    vistos.set(m.id, { id: m.id, cantos: m.cantos, quadro: q });
+  }
+  if (nm) mov = sm / nm / vw;
+  const marc = [...vistos.values()].filter(v => q - v.quadro <= MEMORIA);
+  if (!agora.length) mov = Infinity;
+  const total = modelo.geo.marcadores.length, enc = marc.length >= 3 ? Placa.encaixar(modelo.geo, marc) : null;
+
+  // nitidez e luz só na região da placa, sempre no mesmo tamanho (320 px) pra comparar entre quadros
+  let nit = 0, luz = 0;
+  if (enc) {
+    const bb = caixaDaPlaca(enc.H, 1, vw, vh);
+    nitCtx.drawImage(video, bb.x, bb.y, bb.w, bb.h, 0, 0, 320, 320);
+    const r = nitCtx.getImageData(0, 0, 320, 320);
+    nit = Placa.nitidez(r.data, 320, 320);
+    let s = 0; for (let p = 0; p < r.data.length; p += 16) s += (r.data[p] + r.data[p + 1] + r.data[p + 2]) / 3; luz = s / (r.data.length / 16);
+    picoNit = Math.max(nit, picoNit * 0.98);
+  }
+  const fullK = Math.min(1, LADO_MAX / Math.max(vw, vh));        // escala da foto final
+  const ok = {
+    marc: marc.length >= 3,
+    perto: !!enc && enc.pxPorMm * fullK >= AO_VIVO.PX_MM_MIN,
+    firme: mov < AO_VIVO.MOV_MAX,
+    foco: !!enc && nit > 3 && nit >= 0.75 * picoNit,
+    luz: !!enc && luz > 45 && luz < 235,
+  };
+  semPlaca = marc.length < 2 ? semPlaca + 1 : 0;
+  if (!armado && semPlaca >= 2) armado = true;
+  const pronto = ok.marc && ok.perto && ok.firme && ok.foco && ok.luz;
+  seguidos = pronto && armado ? seguidos + 1 : (ok.marc && ok.firme && armado ? Math.max(0, seguidos - 2) : 0);
+  const precisa = marc.length >= total ? AO_VIVO.QUADROS_FIRME : AO_VIVO.ESPERA_3_MARC;
+
+  $('chMarc').textContent = `marcadores ${marc.length}/${total}`;
+  $('chMarc').classList.toggle('ok', marc.length >= total || (ok.marc && seguidos > 0));
+  $('chPerto').classList.toggle('ok', ok.perto); $('chFirme').classList.toggle('ok', ok.firme);
+  $('chFoco').classList.toggle('ok', ok.foco); $('chLuz').classList.toggle('ok', ok.luz);
+  $('barra').style.width = Math.min(100, seguidos / precisa * 100) + '%';
+  $('btDisparo').classList.toggle('pronto', pronto);
+  $('camMsg').textContent =
+    !armado ? 'Troque a amostra: tire a placa de vista (ou passe a mão) pra liberar a próxima foto' :
+    !ok.marc ? (marc.length ? `Achei ${marc.length} marcador(es). Enquadre a placa inteira.` : 'Aponte para a placa') :
+    !ok.perto ? 'Aproxime o celular da placa' :
+    !ok.luz ? (luz <= 45 ? 'Pouca luz' : 'Luz forte demais / reflexo') :
+    !ok.firme ? 'Segure firme e tire a mão da placa' :
+    !ok.foco ? 'Esperando o foco…' :
+    marc.length < total ? 'Um marcador não aparece… vou contar com 3' : 'Pronto, segure…';
+
+  desenharAoVivo(marc, enc);
+  if (seguidos >= precisa) capturarDoVideo(enc);
+}
+
+function caixaDaPlaca(H, esc, W, A) {
+  const g = modelo.geo, pts = [[0, 0], [g.largura, 0], [g.largura, g.altura], [0, g.altura]].map(p => Placa.aplicar(H, p[0], p[1]));
+  let x0 = Math.min(...pts.map(p => p.x)) * esc, x1 = Math.max(...pts.map(p => p.x)) * esc;
+  let y0 = Math.min(...pts.map(p => p.y)) * esc, y1 = Math.max(...pts.map(p => p.y)) * esc;
+  x0 = Math.max(0, Math.floor(x0)); y0 = Math.max(0, Math.floor(y0)); x1 = Math.min(W, Math.ceil(x1)); y1 = Math.min(A, Math.ceil(y1));
+  return { x: x0, y: y0, w: Math.max(3, x1 - x0), h: Math.max(3, y1 - y0) };
+}
+
+// desenha por cima do vídeo: marcadores achados e os furos do gêmeo digital
+function desenharAoVivo(marc, enc) {
+  const dpr = devicePixelRatio || 1;
+  if (sobre.width !== sobre.clientWidth * dpr) { sobre.width = sobre.clientWidth * dpr; sobre.height = sobre.clientHeight * dpr; }
+  sctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  sctx.clearRect(0, 0, sobre.width, sobre.height);
+  const m = vidParaTela(), T = p => [p.x * m.s + m.ox, p.y * m.s + m.oy];
+  sctx.lineWidth = 3; sctx.strokeStyle = '#57d6bd';
+  for (const mk of marc) { sctx.beginPath(); mk.cantos.forEach((c, i) => sctx[i ? 'lineTo' : 'moveTo'](...T(c))); sctx.closePath(); sctx.stroke(); }
+  if (!enc) return;
+  sctx.lineWidth = 2; sctx.strokeStyle = 'rgba(255,255,255,.85)';
+  for (const f of modelo.geo.furos) {
+    sctx.beginPath();
+    for (let a = 0; a <= 24; a++) { const t = a / 24 * Math.PI * 2, p = Placa.aplicar(enc.H, f.x + f.d / 2 * Math.cos(t), f.y + f.d / 2 * Math.sin(t)); sctx[a ? 'lineTo' : 'moveTo'](...T(p)); }
+    sctx.stroke();
   }
 }
 
-$('btDisparo').onclick = () => {
-  if (prontoSeguidos >= 2) return capturar(true);
-  pedidoFoto = Date.now();
-  $('camMsg').textContent = 'Segure firme… esperando o foco';
-};
+$('btDisparo').onclick = () => capturarDoVideo(null);
 
-function capturar(nitida) {
-  pedidoFoto = null;
-  const r = molduraNoVideo();
-  const lado = Math.min(Math.round(r.lado), LADO_MAX);
-  const cv = document.createElement('canvas'); cv.width = cv.height = lado;
-  cv.getContext('2d').drawImage(video, r.x, r.y, r.lado, r.lado, 0, 0, lado, lado);
-  fecharCamera();
-  $('camMsg').textContent = 'Encaixe a bandeja dentro da moldura';
-  foto = { canvas: cv, w: lado, h: lado, origem: 'camera', nitida };
-  contar(true);
+function capturarDoVideo() {
+  pararLaco(); armado = false; semPlaca = 0;
+  const vw = video.videoWidth, vh = video.videoHeight, s = Math.min(1, LADO_MAX / Math.max(vw, vh));
+  const cv = document.createElement('canvas'); cv.width = Math.round(vw * s); cv.height = Math.round(vh * s);
+  cv.getContext('2d').drawImage(video, 0, 0, cv.width, cv.height);
+  sctx.clearRect(0, 0, sobre.width, sobre.height);
+  foto = { canvas: cv, w: cv.width, h: cv.height, origem: 'camera' };
+  contarFoto();
 }
 
-// ---------- foto da galeria / câmera nativa ----------
+// ---------- foto da galeria ----------
 $('inFoto').onchange = async e => {
   const f = e.target.files[0]; e.target.value = '';
-  if (!f) return;
+  if (!f || !modelo) return;
+  prepararSom();
   const bmp = await createImageBitmap(f);
   const s = Math.min(1, LADO_MAX / Math.max(bmp.width, bmp.height));
   const cv = document.createElement('canvas'); cv.width = Math.round(bmp.width * s); cv.height = Math.round(bmp.height * s);
   cv.getContext('2d').drawImage(bmp, 0, 0, cv.width, cv.height);
-  foto = { canvas: cv, w: cv.width, h: cv.height, origem: 'galeria', nitida: true };
-  contar(true);
+  foto = { canvas: cv, w: cv.width, h: cv.height, origem: 'galeria' };
+  contarFoto();
 };
 
-// ---------- contagem ----------
-function contar(nova) {
-  $('ocupado').classList.add('on');
-  setTimeout(() => {      // deixa o "Contando…" aparecer antes do cálculo pesado
+// =====================================================================
+// CONTAGEM E RESULTADO
+// =====================================================================
+function contarFoto() {
+  ocupado('Contando…');
+  setTimeout(() => {         // deixa o "Contando…" aparecer antes do cálculo
     const dados = foto.canvas.getContext('2d').getImageData(0, 0, foto.w, foto.h).data;
-    res = Contagem.contarGraos(dados, foto.w, foto.h, { modo, ajuste: +$('ajuste').value });
-    graos = res.graos.map(g => ({ x: g.x, y: g.y }));
-    historico = []; mascaraCv = null;
-    const av = res.avisos.slice();
-    if (!foto.nitida) av.unshift('A foto foi tirada sem foco/firmeza confirmados. Se os círculos estiverem estranhos, refaça.');
-    $('avisos').innerHTML = av.map(a => `<p>${a}</p>`).join('');
-    $('ocupado').classList.remove('on');
-    if (nova) mostrar('telaResultado');
-    desenhar();
-  }, 30);
-}
-
-const quadro = $('quadro'), qctx = quadro.getContext('2d');
-let mascaraCv = null;
-function desenhar() {
-  quadro.width = foto.w; quadro.height = foto.h;
-  qctx.drawImage(foto.canvas, 0, 0);
-  if ($('verMascara').checked) {
-    if (!mascaraCv) {
-      mascaraCv = document.createElement('canvas'); mascaraCv.width = foto.w; mascaraCv.height = foto.h;
+    let r;
+    try { r = Placa.contar(dados, foto.w, foto.h, modelo); } catch (e) { r = { ok: false, motivo: 'Erro na análise: ' + e.message }; }
+    ocupado(null);
+    if (!r.ok) {
+      BEEP.erro();
+      if (foto.origem === 'camera') {
+        armado = true;
+        abrirCamera(r.motivo + ' Tente de novo.');
+      } else alert(r.motivo + ' Confira se a placa inteira aparece na foto.');
+      return;
     }
-    const mc = mascaraCv.getContext('2d'), img = mc.createImageData(foto.w, foto.h);
-    for (let i = 0, p = 0; i < res.mascara.length; i++, p += 4) if (res.mascara[i]) { img.data[p] = 255; img.data[p + 1] = 40; img.data[p + 2] = 160; img.data[p + 3] = 130; }
-    mc.putImageData(img, 0, 0); qctx.drawImage(mascaraCv, 0, 0);
-  }
-  const r = Math.max(6, res.raio * 0.85);
-  qctx.lineWidth = Math.max(2, foto.w / 450);
-  for (const g of graos) {
-    qctx.strokeStyle = g.manual ? '#f3bd3e' : '#00e0a0';
-    qctx.beginPath(); qctx.arc(g.x, g.y, r, 0, Math.PI * 2); qctx.stroke();
-  }
-  $('num').textContent = graos.length;
+    res = r; estados = r.furos.map(f => f.estado); manual = estados.map(() => false); historico = []; alertaConferido = false;
+    vistaCv = null;
+    if (r.anomalias.length) BEEP.alerta(); else BEEP.ok();
+    mostrar('telaResultado');
+    desenhar();
+  }, 40);
 }
 
-// toque no quadro: perto de um círculo remove, no vazio adiciona
-quadro.addEventListener('click', e => {
-  const b = quadro.getBoundingClientRect();
-  const x = (e.clientX - b.left) * foto.w / b.width, y = (e.clientY - b.top) * foto.h / b.height;
-  const lim = Math.max(8, res.raio || 12);
-  let melhor = -1, bd = Infinity;
-  graos.forEach((g, i) => { const d = Math.hypot(g.x - x, g.y - y); if (d < bd) { bd = d; melhor = i; } });
-  historico.push(graos.slice());
-  if (melhor >= 0 && bd <= lim) graos.splice(melhor, 1);
-  else graos.push({ x, y, manual: true });
+const quadroCv = $('quadro'), qctx = quadroCv.getContext('2d');
+let vistaCv = null, recorte = null;
+const COR = { ocupado: '#3cc83c', vazio: '#28aaff', duvidoso: '#ffdc00' };
+
+function desenhar() {
+  const geo = modelo.geo, vista = $('verVista').checked;
+  if (vista) {
+    if (!vistaCv) {
+      vistaCv = document.createElement('canvas'); vistaCv.width = res.W; vistaCv.height = res.A;
+      vistaCv.getContext('2d').putImageData(new ImageData(res.vista, res.W, res.A), 0, 0);
+    }
+    quadroCv.width = res.W; quadroCv.height = res.A;
+    qctx.drawImage(vistaCv, 0, 0);
+    recorte = { vista: true };
+  } else {
+    // recorta a foto em volta da placa (com folga), pra enxergar os furos
+    const bb = caixaDaPlaca(res.enc.H, 1, foto.w, foto.h), f = 0.08;
+    const x = Math.max(0, Math.round(bb.x - bb.w * f)), y = Math.max(0, Math.round(bb.y - bb.h * f));
+    const w = Math.min(foto.w - x, Math.round(bb.w * (1 + 2 * f))), h = Math.min(foto.h - y, Math.round(bb.h * (1 + 2 * f)));
+    quadroCv.width = w; quadroCv.height = h;
+    qctx.drawImage(foto.canvas, x, y, w, h, 0, 0, w, h);
+    recorte = { vista: false, x, y };
+  }
+  const P = (mx, my) => vista ? [mx * res.W / geo.largura, my * res.A / geo.altura] : (p => [p.x - recorte.x, p.y - recorte.y])(Placa.aplicar(res.enc.H, mx, my));
+  const escala = vista ? res.W / geo.largura : res.enc.pxPorMm;
+  qctx.lineWidth = Math.max(2.5, escala * 0.45);
+  geo.furos.forEach((f, i) => {
+    qctx.strokeStyle = COR[estados[i]];
+    qctx.setLineDash(manual[i] ? [escala * 1.2, escala * 0.7] : []);
+    qctx.beginPath();
+    for (let a = 0; a <= 32; a++) { const t = a / 32 * Math.PI * 2; qctx[a ? 'lineTo' : 'moveTo'](...P(f.x + f.d / 2 * Math.cos(t), f.y + f.d / 2 * Math.sin(t))); }
+    qctx.stroke();
+  });
+  qctx.setLineDash([]);
+  // grão extra: círculo vermelho
+  qctx.strokeStyle = '#ff2d2d'; qctx.lineWidth = Math.max(3, escala * 0.6);
+  for (const a of res.anomalias) {
+    qctx.beginPath();
+    for (let k = 0; k <= 32; k++) { const t = k / 32 * Math.PI * 2; qctx[k ? 'lineTo' : 'moveTo'](...P(a.x + 5 * Math.cos(t), a.y + 5 * Math.sin(t))); }
+    qctx.stroke();
+  }
+  atualizarPlacar();
+}
+
+function atualizarPlacar() {
+  const c = { ocupado: 0, vazio: 0, duvidoso: 0 }; estados.forEach(e => c[e]++);
+  $('num').textContent = c.ocupado; $('nOcup').textContent = c.ocupado; $('nVazio').textContent = c.vazio; $('nDuv').textContent = c.duvidoso;
+  const av = [];
+  if (res.anomalias.length && !alertaConferido) {
+    const furos = [...new Set(res.anomalias.map(a => a.pertoDoFuro))].join(', ');
+    av.push(`<div class="aviso extra"><b>Confira a placa:</b> pode ter grão extra por cima, perto do furo ${furos} (círculo vermelho). ` +
+      `Tire o excesso e conte de novo, ou confirme se está tudo certo.<br><button id="btConferi">Conferi — não há grão extra</button></div>`);
+  } else if (res.anomalias.length) av.push('<div class="aviso info">Alerta de grão extra conferido por você.</div>');
+  if (c.duvidoso) av.push(`<div class="aviso duvida"><b>${c.duvidoso} furo(s) em dúvida</b> (amarelo): toque em cada um pra dizer se tem grão.</div>`);
+  av.push('<div class="aviso info">Lembre: 1 furo ocupado = 1 grão. Grão duplo dentro do furo o app ainda não detecta.</div>');
+  $('avisos').innerHTML = av.join('');
+  const bt = $('btConferi'); if (bt) bt.onclick = () => { alertaConferido = true; desenhar(); };
+  const motivo = c.duvidoso ? 'Resolva os furos amarelos pra salvar.' : (res.anomalias.length && !alertaConferido) ? 'Confira o alerta de grão extra pra salvar.' : '';
+  $('btSalvar').disabled = !!motivo; $('porqueNao').textContent = motivo;
+}
+
+// toque num furo: ocupado <-> vazio (duvidoso vira ocupado no 1º toque)
+quadroCv.addEventListener('click', e => {
+  const b = quadroCv.getBoundingClientRect(), geo = modelo.geo;
+  const px = (e.clientX - b.left) * quadroCv.width / b.width, py = (e.clientY - b.top) * quadroCv.height / b.height;
+  let mx, my;
+  if (recorte.vista) { mx = px * geo.largura / res.W; my = py * geo.altura / res.A; }
+  else { const q = Placa.aplicar(Placa.inv3(res.enc.H), px + recorte.x, py + recorte.y); mx = q.x; my = q.y; }
+  let alvo = -1, dmin = Infinity;
+  geo.furos.forEach((f, i) => { const d = Math.hypot(f.x - mx, f.y - my); if (d < dmin) { dmin = d; alvo = i; } });
+  if (alvo < 0 || dmin > geo.furos[alvo].d / 2 + 1.5) return;
+  historico.push({ estados: estados.slice(), manual: manual.slice() });
+  estados[alvo] = estados[alvo] === 'ocupado' ? 'vazio' : 'ocupado';
+  manual[alvo] = estados[alvo] !== res.furos[alvo].estado;
   desenhar();
 });
-$('btDesfazer').onclick = () => { if (historico.length) { graos = historico.pop(); desenhar(); } };
-$('verMascara').onchange = desenhar;
+$('btDesfazer').onclick = () => { if (historico.length) { const h = historico.pop(); estados = h.estados; manual = h.manual; desenhar(); } };
+$('verVista').onchange = desenhar;
 
-let tAjuste = null;
-$('ajuste').oninput = e => {
-  $('valAjuste').textContent = (e.target.value > 0 ? '+' : '') + e.target.value;
-  clearTimeout(tAjuste); tAjuste = setTimeout(() => contar(false), 300);
-};
-
-$('btRefazer').onclick = () => { if (foto.origem === 'camera') $('btAbrirCamera').click(); else { mostrar('telaInicio'); $('inFoto').click(); } };
+function novaContagem() {
+  res = null;
+  if (foto && foto.origem === 'camera') abrirCamera(); else mostrar('telaInicio');
+}
+$('btDescartar').onclick = () => { if (confirm('Descartar esta contagem?')) novaContagem(); };
 $('btSalvar').onclick = () => {
   const s = lerSessao();
-  s.push({ n: graos.length, modo, hora: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) });
+  s.push({
+    n: estados.filter(e => e === 'ocupado').length, furos: estados.length,
+    corrigidos: manual.filter(Boolean).length, alerta: res.anomalias.length > 0,
+    hora: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+  });
   gravarSessao(s);
-  mostrar('telaInicio');
+  novaContagem();
 };
 
 // ---------- offline ----------

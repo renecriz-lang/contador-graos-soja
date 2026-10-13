@@ -1,7 +1,7 @@
 {
   "name": "Contador de Grãos — Soja",
   "short_name": "Contador Soja",
-  "description": "Conta grãos de soja por foto (etapa de contagem do PMS).",
+  "description": "Conta grãos de soja numa placa com furos e marcadores ArUco (etapa de contagem do PMS).",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

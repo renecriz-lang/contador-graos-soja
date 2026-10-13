@@ -3,3 +3,7 @@
 *.jpg
 *.lnk
 RETOMAR_CONTEXTO.txt
+*.STL
+*.stl
+resultado/
+__pycache__/
