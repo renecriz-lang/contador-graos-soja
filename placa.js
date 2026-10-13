@@ -10,7 +10,7 @@
   if (!AR.DICTIONARIES.ARUCO_4X4_1000) require('./vendor/js-aruco2/aruco_4x4_1000');
 
   const CFG = {
-    S: 8,                    // px por mm na vista de cima (gêmeo digital)
+    S: 6,                    // px por mm na vista de cima (gêmeo digital)
     RAIO_ANALISE: 0.8,       // fração do raio do furo analisada (evita a parede)
     CLARO: 0.6,              // pixel "claro" acima de 60% do caminho preto -> branco
     OCUPADO: 0.20,           // nota >= isso: ocupado
@@ -90,7 +90,13 @@
       }
     }
     const lista = Object.values(achados);
-    if (opc.refinar !== false && lista.length) {
+    if (opc.refinar !== false && lista.length) refinarMarcadores(rgba, w, h, lista);
+    return lista;
+  }
+
+  // refino subpixel dos cantos na foto inteira (também serve pra cantos vindos da câmera ao vivo)
+  function refinarMarcadores(rgba, w, h, lista) {
+    {
       const g = cinza(rgba, w, h);
       for (const m of lista) {
         const lado = Math.hypot(m.cantos[1].x - m.cantos[0].x, m.cantos[1].y - m.cantos[0].y);
@@ -341,15 +347,26 @@
   }
 
   /* Tudo de uma vez: foto -> resultado. */
+  /* opc.sementes: marcadores já achados pela câmera ao vivo (em coordenadas desta foto). Se vierem
+     3 ou mais, só refina os cantos e pula a busca em várias escalas (bem mais rápido). */
   function contar(rgba, w, h, modelo, opc) {
     const t0 = Date.now();
-    const marcadores = detectarMarcadores(rgba, w, h, modelo.ids, opc);
-    const enc = encaixar(modelo.geo, marcadores);
+    opc = opc || {};
+    let marcadores = null, enc = null;
+    if (opc.sementes && opc.sementes.length >= 3) {
+      marcadores = refinarMarcadores(rgba, w, h, opc.sementes.map(m => ({ id: m.id, cantos: m.cantos.map(c => ({ x: c.x, y: c.y })) })));
+      enc = encaixar(modelo.geo, marcadores);
+      if (enc && (enc.ids.length < 3 || enc.erroMedio > 3)) enc = null;     // semente ruim: procura de novo
+    }
+    if (!enc) {
+      marcadores = detectarMarcadores(rgba, w, h, modelo.ids, opc);
+      enc = encaixar(modelo.geo, marcadores);
+    }
     if (!enc || enc.ids.length < 3) return { ok: false, marcadores, motivo: 'Não achei pelo menos 3 marcadores da placa.' };
     const r = analisar(rgba, w, h, modelo, enc);
     return Object.assign({ ok: true, marcadores, enc, ms: Date.now() - t0 }, r);
   }
 
-  const api = { CFG, reduzir, detectarMarcadores, encaixar, criarModelo, analisar, contar, aplicar, nitidez, inv3, bitsDoMarcador };
+  const api = { CFG, refinarMarcadores, reduzir, detectarMarcadores, encaixar, criarModelo, analisar, contar, aplicar, nitidez, inv3, bitsDoMarcador };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.Placa = api;
 })(typeof self !== 'undefined' ? self : this);

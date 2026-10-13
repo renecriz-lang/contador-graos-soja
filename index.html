@@ -178,7 +178,7 @@
 <script>
 'use strict';
 const $ = id => document.getElementById(id);
-const LADO_MAX = 2000;            // lado maior da foto analisada (px)
+const LADO_MAX = 1600;            // lado maior da foto analisada (px)
 const CHAVE = 'contador-soja-placa-sessao';
 const ARQ_PLACA = 'placas/placa-24.json';
 
@@ -242,21 +242,20 @@ desenharSessao();
 
 // =====================================================================
 // CÂMERA AO VIVO: acompanha os marcadores e dispara sozinha quando a placa
-// está inteira, perto, firme, nítida e com luz boa.
+// está inteira, perto, firme e com luz boa (nitidez só aparece como aviso).
 // =====================================================================
 const AO_VIVO = {
   LARG: [400, 480, 560],   // escalas alternadas a cada quadro (o detector JS é sensível ao tamanho)
   PX_MM_MIN: 5,            // resolução mínima na foto final (furo de 8,5 mm >= ~42 px)
   MOV_MAX: 0.004,          // movimento máx. dos cantos entre quadros (fração da largura)
-  QUADROS_FIRME: 6,        // quadros seguidos firmes (~1 s) antes de disparar
-  ESPERA_3_MARC: 12,       // com só 3 marcadores, espera mais quadros firmes antes de aceitar
+  QUADROS_FIRME: 3,        // quadros seguidos firmes (~0,4 s) antes de disparar
 };
 let stream = null, rodando = false, quadro = 0, seguidos = 0, picoNit = 0;
-let armado = true, semPlaca = 0;
+let armado = true, semPlaca = 0;   // depois de contar, só dispara de novo quando a placa sair de vista (troca de amostra)
 let vistos = new Map();            // id -> { cantos, quadro }: memória curta (o detector oscila entre quadros)
 const MEMORIA = 3;                 // quadros que um marcador "continua visto" depois de sumir
 const nitCv = document.createElement('canvas'), nitCtx = nitCv.getContext('2d', { willReadFrequently: true });
-nitCv.width = 320; nitCv.height = 320;   // depois de contar, só dispara de novo quando a placa sair de vista (troca de amostra)
+nitCv.width = 320; nitCv.height = 320;
 const video = $('video'), sobre = $('sobre'), sctx = sobre.getContext('2d');
 const peq = document.createElement('canvas'), pctx = peq.getContext('2d', { willReadFrequently: true });
 
@@ -344,9 +343,10 @@ function avaliarQuadro() {
   };
   semPlaca = marc.length < 2 ? semPlaca + 1 : 0;
   if (!armado && semPlaca >= 2) armado = true;
-  const pronto = ok.marc && ok.perto && ok.firme && ok.foco && ok.luz;
-  seguidos = pronto && armado ? seguidos + 1 : (ok.marc && ok.firme && armado ? Math.max(0, seguidos - 2) : 0);
-  const precisa = marc.length >= total ? AO_VIVO.QUADROS_FIRME : AO_VIVO.ESPERA_3_MARC;
+  // nitidez só informa (placa parada já sai nítida o bastante pros furos); quem dispara é marcador + perto + firme + luz
+  const pronto = ok.marc && ok.perto && ok.firme && ok.luz;
+  seguidos = pronto && armado ? seguidos + 1 : 0;
+  const precisa = AO_VIVO.QUADROS_FIRME;
 
   $('chMarc').textContent = `marcadores ${marc.length}/${total}`;
   $('chMarc').classList.toggle('ok', marc.length >= total || (ok.marc && seguidos > 0));
@@ -359,12 +359,10 @@ function avaliarQuadro() {
     !ok.marc ? (marc.length ? `Achei ${marc.length} marcador(es). Enquadre a placa inteira.` : 'Aponte para a placa') :
     !ok.perto ? 'Aproxime o celular da placa' :
     !ok.luz ? (luz <= 45 ? 'Pouca luz' : 'Luz forte demais / reflexo') :
-    !ok.firme ? 'Segure firme e tire a mão da placa' :
-    !ok.foco ? 'Esperando o foco…' :
-    marc.length < total ? 'Um marcador não aparece… vou contar com 3' : 'Pronto, segure…';
+    !ok.firme ? 'Segure firme e tire a mão da placa' : 'Pronto, segure…';
 
   desenharAoVivo(marc, enc);
-  if (seguidos >= precisa) capturarDoVideo(enc);
+  if (seguidos >= precisa) capturarDoVideo(marc);
 }
 
 function caixaDaPlaca(H, esc, W, A) {
@@ -393,15 +391,17 @@ function desenharAoVivo(marc, enc) {
   }
 }
 
-$('btDisparo').onclick = () => capturarDoVideo(null);
+$('btDisparo').onclick = () => capturarDoVideo([...vistos.values()].filter(v => quadro - 1 - v.quadro <= MEMORIA));
 
-function capturarDoVideo() {
+// marcadores do ao vivo viram "sementes": a análise só refina os cantos em vez de procurar de novo
+function capturarDoVideo(marc) {
   pararLaco(); armado = false; semPlaca = 0;
   const vw = video.videoWidth, vh = video.videoHeight, s = Math.min(1, LADO_MAX / Math.max(vw, vh));
   const cv = document.createElement('canvas'); cv.width = Math.round(vw * s); cv.height = Math.round(vh * s);
   cv.getContext('2d').drawImage(video, 0, 0, cv.width, cv.height);
   sctx.clearRect(0, 0, sobre.width, sobre.height);
-  foto = { canvas: cv, w: cv.width, h: cv.height, origem: 'camera' };
+  const sementes = (marc || []).map(m => ({ id: m.id, cantos: m.cantos.map(c => ({ x: c.x * s, y: c.y * s })) }));
+  foto = { canvas: cv, w: cv.width, h: cv.height, origem: 'camera', sementes };
   contarFoto();
 }
 
@@ -426,7 +426,7 @@ function contarFoto() {
   setTimeout(() => {         // deixa o "Contando…" aparecer antes do cálculo
     const dados = foto.canvas.getContext('2d').getImageData(0, 0, foto.w, foto.h).data;
     let r;
-    try { r = Placa.contar(dados, foto.w, foto.h, modelo); } catch (e) { r = { ok: false, motivo: 'Erro na análise: ' + e.message }; }
+    try { r = Placa.contar(dados, foto.w, foto.h, modelo, { sementes: foto.sementes }); } catch (e) { r = { ok: false, motivo: 'Erro na análise: ' + e.message }; }
     ocupado(null);
     if (!r.ok) {
       BEEP.erro();
