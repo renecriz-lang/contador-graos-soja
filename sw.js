@@ -1,4 +1,4 @@
-const CACHE = 'contador-soja-v2';
+const CACHE = 'contador-soja-v3';
 
 const SHELL_PATHS = [
   './',
@@ -14,9 +14,6 @@ const SHELL_PATHS = [
   './icon-512-maskable.png',
   './icon.svg',
 ];
-
-// Resolve to full absolute URLs using the SW's own location as base
-const SHELL_URLS = new Set(SHELL_PATHS.map(p => new URL(p, self.location).href));
 
 self.addEventListener('install', e => {
   e.waitUntil(
@@ -38,29 +35,16 @@ self.addEventListener('activate', e => {
 
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
-
-  if (SHELL_URLS.has(e.request.url)) {
-    // App shell: cache-first
-    e.respondWith(
-      caches.match(e.request).then(cached => {
-        if (cached) return cached;
-        return fetch(e.request).then(res => {
-          caches.open(CACHE).then(c => c.put(e.request, res.clone()));
-          return res;
-        });
+  // Rede primeiro (versao nova chega na hora); sem internet, usa a copia guardada.
+  e.respondWith(
+    fetch(e.request)
+      .then(res => {
+        if (res.status === 200) {
+          const copia = res.clone();
+          caches.open(CACHE).then(c => c.put(e.request, copia));
+        }
+        return res;
       })
-    );
-  } else {
-    // Tudo mais (fontes, etc.): network-first, cai no cache se offline
-    e.respondWith(
-      fetch(e.request)
-        .then(res => {
-          if (res.status === 200) {
-            caches.open(CACHE).then(c => c.put(e.request, res.clone()));
-          }
-          return res;
-        })
-        .catch(() => caches.match(e.request))
-    );
-  }
+      .catch(() => caches.match(e.request, { ignoreSearch: true }))
+  );
 });

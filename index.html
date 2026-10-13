@@ -540,7 +540,12 @@ $('btSalvar').onclick = () => {
 };
 
 // ---------- offline ----------
-if ('serviceWorker' in navigator) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+if ('serviceWorker' in navigator) {
+  addEventListener('load', () => navigator.serviceWorker.register('sw.js').then(r => r.update()).catch(() => {}));
+  // quando uma versão nova assume, recarrega uma vez pra já usar ela
+  let recarregou = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => { if (!recarregou) { recarregou = true; location.reload(); } });
+}
 </script>
 </body>
 </html>
