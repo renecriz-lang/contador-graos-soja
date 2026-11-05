@@ -1,10 +1,10 @@
-const CACHE = 'contador-soja-v6';
+const CACHE = 'contador-soja-v7';
 
 const SHELL_PATHS = [
   './',
   './index.html',
   './placa.js',
-  './placas/placa-24.json',
+  './placas/placa-240.json',
   './vendor/js-aruco2/cv.js',
   './vendor/js-aruco2/aruco.js',
   './vendor/js-aruco2/aruco_4x4_1000.js',

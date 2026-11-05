@@ -181,7 +181,7 @@
 const $ = id => document.getElementById(id);
 const LADO_MAX = 1600;            // lado maior da foto analisada (px)
 const CHAVE = 'contador-soja-placa-sessao';
-const ARQ_PLACA = 'placas/placa-24.json';
+const ARQ_PLACA = 'placas/placa-240.json';
 
 let modelo = null;                // gêmeo digital (máscaras prontas)
 let foto = null;                  // { canvas, w, h, origem }
@@ -247,7 +247,7 @@ desenharSessao();
 // Os outros indicadores só informam, não seguram o disparo.
 // =====================================================================
 const AO_VIVO = {
-  LARG: [400, 480, 560],   // escalas alternadas a cada quadro (o detector JS é sensível ao tamanho)
+  LARG: [480, 560, 640],   // escalas alternadas a cada quadro (o detector JS é sensível ao tamanho)
   PX_MM_MIN: 5,            // resolução mínima na foto final (furo de 8,5 mm >= ~42 px)
   MOV_MAX: 0.004,          // movimento máx. dos cantos entre quadros (fração da largura)
   QUADROS: 1,              // quadros com os marcadores achados antes de disparar
